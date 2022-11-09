@@ -4,6 +4,7 @@ import time
 import datetime
 import math
 
+# request data by block number
 def get_data(block_height):
     r = requests.get(f'https://blockchain.info/block-height/{block_height}?format=json')
     html = r.text
@@ -11,43 +12,30 @@ def get_data(block_height):
     return res
 
 
-def block_by_id(block_number):
-    return get_data(block_number)
-
-
+# get the timestamp from the requested block
 def get_timestamp(block):
     return block['blocks'][0]['time']
 
 
-def timeStampIntervals(first_bloct_time_stamp, last_timestamp=int(time.time()), interval=10):
-    unix_interval = interval * 60
-
-    timestamps = [x for x in range(first_bloct_time_stamp, last_timestamp, unix_interval)]
-    return timestamps
-
-
-def timestampLookUp(timestamps, needed_time_stamp):
-    return min(timestamps, key=lambda sub: abs(sub - needed_time_stamp))
-
-
-def get_location_of_timestamp(timestamps, closest_time_stamp):
-    return timestamps.index(closest_time_stamp)
-
+# This is helpper to see the unix in datetime format
 def unix_to_datetime(timestamp):
     return datetime.datetime.fromtimestamp(timestamp)
 
 
-class calculator:
+# Here will be most of the calculation
+# THe algo splitting the range of blocks (Example Block 500 to 10000) and deciding what to do next.
+# It always looking for two date and checking if the requested data by the user in the range.
+class Calculator:
     def __init__(self, b1, b2, latest_block):
         self.b1 = b1
         self.b2 = b2
         self.latest_block = latest_block
 
     def get_range(self):
-        b1_id = block_by_id(self.b1)
+        b1_id = get_data(self.b1)
         if self.b2 > self.latest_block:
             self.b2 = self.latest_block
-        b2_id = block_by_id(self.b2)
+        b2_id = get_data(self.b2)
         self.t1 = get_timestamp(b1_id)
         self.t2 = get_timestamp(b2_id)
 
