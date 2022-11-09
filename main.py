@@ -25,6 +25,7 @@ def unix_to_datetime(timestamp):
 # Here will be most of the calculation
 # THe algo splitting the range of blocks (Example Block 500 to 10000) and deciding what to do next.
 # It always looking for two date and checking if the requested data by the user in the range.
+# b1 the left side of the range, b2 the right side, latest_block is a most resent block
 class Calculator:
     def __init__(self, b1, b2, latest_block):
         self.b1 = b1
@@ -42,11 +43,10 @@ class Calculator:
         return self.t1, self.t2
 
     def new_edges(self, wanted_time):
-        print(unix_to_datetime(self.t1), unix_to_datetime(wanted_time), unix_to_datetime(self.t2))
-
         if self.t1 < wanted_time < self.t2:
-            print("hi")
-            print(self.b1, self.b2)
+            # I made all of this if's to get closer to the correct answer.
+            # If I am using only: math.floor((self.b1 + self.b2)/2) it will jump between the ranges.
+            # This part have to be done better as it not work properly with large numbers (Block 700K+)
             if self.b2 - self.b1 == 1:
                 return self.b1, self.b2
             elif self.b2 - self.b1 <= 3:
@@ -59,14 +59,10 @@ class Calculator:
                 self.b1 = math.floor((self.b1 + self.b2)/2)
                 self.b2 = math.floor(self.b2)
         elif wanted_time > self.t2:
-            print("ha")
-            print(self.b1, self.b2)
             self.b1 = int(self.b2)
             self.b2 = int(self.b2 * 1.1)
 
         elif wanted_time < self.t1:
-            print('asd')
-            print(self.b1, self.b2)
             self.b2 = int(self.b1)
             self.b1 = int(self.b1 * 0.25)
 
@@ -78,12 +74,14 @@ class Calculator:
         return self.b1, self.b2, self.t1, self.t2
 
 
+# This is the first runner and Checker of the results
 def runner(needed_time_stamp, latest_block):
-
+    # The initial split of the blocks 0----b1--------b2----latest_block
     b1 = int(latest_block*0.33)
     b2 = int(latest_block*0.66)
 
-    ca = calculator(b1, b2, latest_block)
+    ca = Calculator(b1, b2, latest_block)
+
     while True:
         bb1, bb2, tFinal1, tFinal2 = ca.run_class(needed_time_stamp)
         if abs(bb1 - bb2) == 1:
@@ -97,8 +95,10 @@ def runner(needed_time_stamp, latest_block):
         final_res = bb2
     return final_res
 
+
+# This function responsible on client request. What timestamp he's looking for.
 def client_input():
-    theBlock = 762448
+    theBlock = 762448 # This is the latest block inthe time of doing. I gave an option to replace it by input.
     needed_time_stamp = input("To find the block you looking for enter unix timestamp: ")
     latest_block = input(f"Please enter latest block number."
                          f"\nIf you dont want to the program will"
